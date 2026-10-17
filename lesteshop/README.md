@@ -50,15 +50,40 @@ pytest
 
 ## Como coletar um produto
 
+O Compras Paraguai usa proteção anti-robô (Cloudflare) e responde 403 a acessos automáticos
+comuns. Por isso a coleta é feita com `--navegador`: abre uma janela do Chromium e **você
+resolve a verificação** do site quando ela aparecer. O LesteShop não tenta contornar a
+proteção (sem plugins "stealth", sem resolver CAPTCHA automaticamente). Precisa de uma tela,
+então rode no seu computador.
+
+Instalação extra (uma vez):
+
+```bash
+pip install -e ".[dev,navegador]"
+playwright install chromium
+```
+
 ```bash
 # ver quais modelos a busca encontra
-python -m lesteshop.data.coletar "playstation 5 pro" --listar
+python -m lesteshop.data.coletar "playstation 5 pro" --listar --navegador
 
 # coletar as ofertas do primeiro modelo encontrado (padrão: 1 modelo por termo)
-python -m lesteshop.data.coletar "playstation 5 pro"
+python -m lesteshop.data.coletar "playstation 5 pro" --navegador
 
 # ou indicar a página do modelo diretamente
-python -m lesteshop.data.coletar --url "https://www.comprasparaguai.com.br/<slug>_<id>/"
+python -m lesteshop.data.coletar --url "https://www.comprasparaguai.com.br/<slug>_<id>/" --navegador
+```
+
+Quando aparecer no terminal *"O Compras Paraguai pediu uma verificação anti-robô"*, vá até a
+janela do navegador, resolva a verificação e aguarde: a coleta continua sozinha. O perfil do
+navegador fica em `data/cache/navegador/`, então a liberação vale para as próximas coletas
+enquanto o site não pedir de novo. Prazo para resolver: 5 minutos.
+
+Antes da primeira coleta, vale conferir o parser contra o HTML real:
+
+```bash
+python -m lesteshop.data.salvar_fixtures "playstation 5 pro" --navegador
+pytest tests/test_fixtures_reais.py -v
 ```
 
 A coleta espera 10 s entre requisições, respeita o `robots.txt`, guarda as páginas em cache e
@@ -122,6 +147,11 @@ A data da última atualização fica em `data/catalogo_meta.json`. Se a atualiza
 CSV existente não é alterado.
 
 ## Atualização automática (GitHub Actions)
+
+> **Atenção:** como o site exige verificação humana, o workflow automático tende a falhar
+> (com mensagem clara e sem alterar o catálogo). Enquanto isso valer, atualize o catálogo
+> no seu computador com `python -m lesteshop.data.catalogo atualizar --navegador` e faça
+> commit de `data/catalogo_modelos.csv` e `data/catalogo_meta.json`.
 
 O workflow **"Atualizar catálogo de modelos"** roda toda segunda-feira às 03:00 de Brasília
 (`cron: "0 6 * * 1"`, em UTC). Ele roda os testes, atualiza o catálogo e faz commit só se o

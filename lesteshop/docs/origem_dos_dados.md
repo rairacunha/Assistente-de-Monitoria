@@ -35,6 +35,15 @@ Nenhum dado inventado é marcado como `real`.
 
 ## Limitações conhecidas
 
+0. **Proteção anti-robô do site (Cloudflare).** Em 17/10/2026 o Compras Paraguai passou a
+   responder HTTP 403 com `cf-mitigated: challenge` a qualquer acesso automático, inclusive ao
+   `robots.txt`. O LesteShop não contorna essa proteção: a coleta abre um navegador visível
+   (`--navegador`), o usuário resolve a verificação e só então as páginas são baixadas,
+   dentro da mesma janela, em volume mínimo. Consequências: a coleta exige uma pessoa
+   presente, não roda em servidores nem no GitHub Actions, e pode deixar de funcionar se o
+   site endurecer a proteção. Não há acordo formal com o site; para uso fora do contexto
+   acadêmico seria preciso autorização ou uma API oficial (`FonteAPI`).
+
 1. **Preços podem estar desatualizados.** O Compras Paraguai mostra preços capturados
    automaticamente dos sites das lojas; o preço no balcão pode ser diferente. Por isso
    toda oferta tem `data_coleta`, e ofertas reais com mais de 30 dias geram alerta.

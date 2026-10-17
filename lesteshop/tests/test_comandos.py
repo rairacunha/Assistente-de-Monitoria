@@ -13,6 +13,7 @@ def test_comando_coletar_grava_csv_e_banco(monkeypatch, tmp_path, cliente_falso,
     original = FonteComprasParaguai
 
     def fonte_offline(**kw):
+        kw.pop("cliente", None)
         return original(cliente=cliente_falso, dir_cache_lojas=tmp_path / "lojas", **kw)
 
     monkeypatch.setattr(coletar, "FonteComprasParaguai", fonte_offline)

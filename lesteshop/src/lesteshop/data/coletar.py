@@ -6,6 +6,7 @@ Exemplos::
     python -m lesteshop.data.coletar "playstation 5 pro" --listar          # só mostra os modelos achados
     python -m lesteshop.data.coletar --url https://www.comprasparaguai.com.br/<slug>_<id>/
     python -m lesteshop.data.coletar "iphone 16" --max-modelos 3 --categoria Celulares
+    python -m lesteshop.data.coletar "playstation 5 pro" --navegador   # janela do Chromium; você resolve a verificação
 
 Cada coleta é salva em data/coletas/<AAAA-MM-DD>/ (CSV, versionável) e gravada
 no SQLite (data/lesteshop.db).
@@ -23,6 +24,7 @@ import pandas as pd
 from . import config, database, esquema
 from .sources.comprasparaguai import FonteComprasParaguai, ResultadoColeta
 from .sources.http import ErroColeta
+from .sources.navegador import ClienteNavegador
 from .sources.parser_cp import ErroEstruturaHTML
 from .validator import validar
 
@@ -55,11 +57,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--categoria", help="categoria a gravar nos produtos coletados")
     parser.add_argument("--listar", action="store_true", help="só lista os modelos encontrados na busca")
     parser.add_argument("--banco", default=str(config.CAMINHO_BANCO))
+    parser.add_argument("--navegador", action="store_true",
+                        help="baixa pelo Chromium visível; você resolve a verificação anti-robô do site")
     args = parser.parse_args(argv)
     if not args.termos and not args.url:
         parser.error("informe ao menos um termo de busca ou --url")
 
-    fonte = FonteComprasParaguai(termos=args.termos, urls_modelos=args.url,
+    cliente = ClienteNavegador() if args.navegador else None
+    try:
+        return _coletar(args, cliente)
+    finally:
+        if cliente is not None:
+            cliente.fechar()
+
+
+def _coletar(args, cliente) -> int:
+    fonte = FonteComprasParaguai(termos=args.termos, urls_modelos=args.url, cliente=cliente,
                                  max_modelos_por_termo=args.max_modelos, categoria=args.categoria)
     try:
         if args.listar:

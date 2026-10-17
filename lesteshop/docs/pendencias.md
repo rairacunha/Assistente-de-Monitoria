@@ -26,6 +26,11 @@ outras fases do modelo cascata.
 
 ## Fase 4 — Aplicativo
 
+* **Coleta no aparelho do usuário.** Como o site exige verificação humana, um servidor não
+  consegue coletar sozinho. No app, as páginas teriam de ser carregadas no próprio
+  celular/computador do turista (que resolve a verificação), ou o app usaria só a base já
+  coletada. Decidir a arquitetura nesta fase.
+
 * Lista suspensa de autocompletar usando `catalogo.sugerir_modelos()` (já pronta e testada).
 * Telas de lista de compras, resultado (itens, lojas, roteiro, gasto, situação da cota).
 * Exibição em R$ via `cotacao.obter_cotacao()` / `usd_para_brl()`.
@@ -39,5 +44,8 @@ outras fases do modelo cascata.
   hoje só lemos o HTML inicial.
 * Popular `categoria` no catálogo (o sitemap não informa).
 * Agrupar lojas do mesmo grupo (mesmo WhatsApp/razão social), se for desejado.
-* Verificar se o GitHub Actions consegue acessar o site (alguns sites bloqueiam IPs de
-  datacenter); se não, rodar `python -m lesteshop.data.catalogo atualizar` localmente.
+* O GitHub Actions não passa pela verificação anti-robô do site (confirmado: 403 com
+  `cf-mitigated: challenge`). Enquanto for assim, atualizar o catálogo localmente com
+  `python -m lesteshop.data.catalogo atualizar --navegador`, ou desativar o agendamento.
+* Pedir autorização ao Compras Paraguai (e-mail explicando o projeto acadêmico) ou acesso a
+  uma API.

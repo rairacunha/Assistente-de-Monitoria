@@ -286,17 +286,26 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="comando", required=True)
     p_at = sub.add_parser("atualizar", help="baixa o sitemap e atualiza data/catalogo_modelos.csv")
     p_at.add_argument("--max-sitemaps", type=int, default=None, help="limita quantos sitemaps baixar")
+    p_at.add_argument("--navegador", action="store_true",
+                      help="baixa pelo Chromium visível; você resolve a verificação anti-robô do site")
     p_su = sub.add_parser("sugerir", help="busca no catálogo local (sem internet)")
     p_su.add_argument("texto")
     p_su.add_argument("--limite", type=int, default=10)
     args = parser.parse_args(argv)
 
     if args.comando == "atualizar":
+        cliente = None
+        if args.navegador:
+            from .sources.navegador import ClienteNavegador
+            cliente = ClienteNavegador()
         try:
-            meta = atualizar_catalogo(max_sitemaps=args.max_sitemaps)
+            meta = atualizar_catalogo(cliente=cliente, max_sitemaps=args.max_sitemaps)
         except ErroCatalogo as e:
             print(f"::error::Atualização do catálogo falhou: {e}", file=sys.stderr)
             return 1
+        finally:
+            if cliente is not None:
+                cliente.fechar()
         print(f"Catálogo atualizado em {meta['ultima_atualizacao']}: {meta['total']} modelos "
               f"({meta['novos']} novos, {meta['removidos']} removidos).")
         _escrever_github_output(meta)

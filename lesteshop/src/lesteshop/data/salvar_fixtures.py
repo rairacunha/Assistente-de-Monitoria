@@ -3,7 +3,7 @@
 Serve para conferir o parser contra o HTML real (as fixtures padrão foram
 escritas à mão). Segue as mesmas regras de boa conduta da coleta.
 
-    python -m lesteshop.data.salvar_fixtures "playstation 5 pro"
+    python -m lesteshop.data.salvar_fixtures "playstation 5 pro" --navegador
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from urllib.parse import quote_plus
 from . import config
 from .sources import parser_cp
 from .sources.http import ClienteHTTP
+from .sources.navegador import ClienteNavegador
 
 DESTINO = config.RAIZ / "tests" / "fixtures" / "reais"
 
@@ -23,8 +24,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("termo")
     parser.add_argument("--max-lojas", type=int, default=3)
+    parser.add_argument("--navegador", action="store_true",
+                        help="baixa pelo Chromium visível; você resolve a verificação anti-robô do site")
     args = parser.parse_args(argv)
-    cliente = ClienteHTTP()
+    cliente = ClienteNavegador() if args.navegador else ClienteHTTP()
+    try:
+        return _salvar(args, cliente)
+    finally:
+        if args.navegador:
+            cliente.fechar()
+
+
+def _salvar(args, cliente) -> int:
     DESTINO.mkdir(parents=True, exist_ok=True)
 
     html_busca = cliente.get(f"{config.URL_BASE_CP}/busca/?q={quote_plus(args.termo)}")
